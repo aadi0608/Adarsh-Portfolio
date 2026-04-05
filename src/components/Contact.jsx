@@ -15,33 +15,26 @@ export default function Contact({ dark }) {
 
   const [form, setForm] = useState({ name: '', email: '', message: '' })
   const [sent, setSent] = useState(false)
-  const [loading, setLoading] = useState(false)
 
   const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
 
   const handleSubmit = e => {
     e.preventDefault()
 
-      if (!/\S+@\S+\.\S+/.test(form.email)) {
-    alert("Invalid email")
-    return
-    }
-    setLoading(true)
-  emailjs.send(
-    import.meta.env.VITE_SERVICE_ID,
-    import.meta.env.VITE_TEMPLATE_ID,
-    form,
-    import.meta.env.VITE_PUBLIC_KEY
-  )
-      .then(() => {
+    if (!form.name || !form.email || !form.message) return
+
+    emailjs.send(
+      'service_8tqii66',
+      'template_ib20rjh',
+      form,
+      'M7dWtAXq7zGWODNbr'
+    )
+    .then(() => {
       setSent(true)
       setForm({ name: '', email: '', message: '' })
     })
-    .catch(() => {
-      alert("Failed to send message")
-    })
-    .finally(() => {
-      setLoading(false)
+    .catch(err => {
+      console.error(err)
     })
   }
 
@@ -258,7 +251,6 @@ export default function Contact({ dark }) {
                       sx={inputSx}
                     />
                     <Button
-                      disabled={loading}
                       type="submit"
                       variant="contained"
                       size="large"
