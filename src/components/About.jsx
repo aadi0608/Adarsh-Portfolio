@@ -30,7 +30,7 @@ export default function About({ dark }) {
     {
       icon: "📍",
       title: "Location",
-      sub: "India",
+      sub: "Pune, India",
       detail: "Open to Remote / Hybrid",
       color: "#ff4081",
     },

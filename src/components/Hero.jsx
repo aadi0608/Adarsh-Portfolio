@@ -111,8 +111,8 @@ export default function Hero({ dark, onNavigate }) {
                 <Box component="span" sx={{ color: accent, fontWeight: 600 }}>
                   Automaton AI Infosystem
                 </Box>{' '}
-                crafting production-ready web &amp; mobile experiences with React,
-                TypeScript, and cutting-edge technologies.
+                crafting production-ready web &amp; mobile Applications with React, React Native,
+                TypeScript, JavaScript and cutting-edge technologies.
               </Typography>
             </Reveal>
 
