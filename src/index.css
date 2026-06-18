@@ -13,27 +13,24 @@ body {
   overflow-x: hidden;
 }
 
-/* ─── Scrollbar ─────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #00e5ff, #7c4dff);
-  border-radius: 4px;
+  background: linear-gradient(180deg, #00e5ff, #7c4dff, #ff4081);
+  border-radius: 3px;
 }
 
-/* ─── Cursor glow ────────────────────────────────── */
 .cursor-glow {
-  width: 20px;
-  height: 20px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   position: fixed;
   pointer-events: none;
   z-index: 9999;
   mix-blend-mode: screen;
-  transition: transform 0.1s ease;
+  transition: width 0.2s ease, height 0.2s ease;
 }
 
-/* ─── Keyframes ──────────────────────────────────── */
 @keyframes float {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   33%       { transform: translateY(-14px) rotate(1.5deg); }
@@ -80,12 +77,27 @@ body {
   50%       { opacity: 0; }
 }
 
-@keyframes scanLine {
-  0%   { top: 0%; }
-  100% { top: 100%; }
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-/* ─── Utility ────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(0, 229, 255, 0.3); }
+  50%      { border-color: rgba(124, 77, 255, 0.6); }
+}
+
 .gradient-text {
   background: linear-gradient(135deg, #00e5ff 0%, #7c4dff 55%, #ff4081 100%);
   -webkit-background-clip: text;
@@ -108,4 +120,28 @@ body {
 
 .pulse-glow {
   animation: pulseGlow 4s ease-in-out infinite;
+}
+
+.glass {
+  background: rgba(10, 25, 50, 0.55);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(0, 229, 255, 0.13);
+}
+
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, #00e5ff, #7c4dff, #ff4081, #00e5ff);
+  background-size: 300% 300%;
+  animation: gradientShift 4s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
 }

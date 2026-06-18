@@ -34,11 +34,11 @@ export const darkTheme = createTheme({
     primary:    { main: '#00e5ff' },
     secondary:  { main: '#7c4dff' },
     background: {
-      default: '#040b14',
+      default: '#030811',
       paper:   'rgba(8, 18, 38, 0.75)',
     },
     text: {
-      primary:   '#e8f4f8',
+      primary:   '#eaf4fc',
       secondary: '#8faabe',
     },
   },

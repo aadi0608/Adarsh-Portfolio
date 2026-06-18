@@ -1,17 +1,67 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import {
   Box, Container, Grid, Typography, Button, TextField,
 } from '@mui/material'
+import { motion, useInView, AnimatePresence } from 'framer-motion'
 import SendIcon from '@mui/icons-material/Send'
 import { CONTACT_LINKS } from '../data'
-import Reveal from './Reveal'
-import TiltCard from './TiltCard'
 import emailjs from 'emailjs-com'
 
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.12 } },
+}
+
+const fadeLeft = {
+  hidden: { x: -40, opacity: 0 },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: { type: 'spring', stiffness: 80, damping: 20 },
+  },
+}
+
+const fadeRight = {
+  hidden: { x: 40, opacity: 0 },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: { type: 'spring', stiffness: 80, damping: 20 },
+  },
+}
+
+function MagneticButton({ children, sx = {}, ...props }) {
+  const ref = useRef(null)
+
+  const handleMouse = e => {
+    const el = ref.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const x = e.clientX - rect.left - rect.width / 2
+    const y = e.clientY - rect.top - rect.height / 2
+    el.querySelector('button').style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`
+  }
+
+  const reset = () => {
+    if (ref.current) {
+      ref.current.querySelector('button').style.transform = 'translate(0, 0)'
+    }
+  }
+
+  return (
+    <Box ref={ref} onMouseMove={handleMouse} onMouseLeave={reset}>
+      <Button sx={sx} {...props}>
+        {children}
+      </Button>
+    </Box>
+  )
+}
+
 export default function Contact({ dark }) {
-  const accent      = dark ? '#00e5ff' : '#7c4dff'
-  const glassBg     = dark ? 'rgba(10,25,50,0.6)'  : 'rgba(255,255,255,0.65)'
-  const glassBorder = dark ? '1px solid rgba(0,229,255,0.14)' : '1px solid rgba(124,77,255,0.14)'
+  const accent = dark ? '#00e5ff' : '#7c4dff'
+
+  const sectionRef = useRef(null)
+  const inView = useInView(sectionRef, { once: true, amount: 0.1 })
 
   const [form, setForm] = useState({ name: '', email: '', message: '' })
   const [sent, setSent] = useState(false)
@@ -20,7 +70,6 @@ export default function Contact({ dark }) {
 
   const handleSubmit = e => {
     e.preventDefault()
-
     if (!form.name || !form.email || !form.message) return
 
     emailjs.send(
@@ -33,10 +82,13 @@ export default function Contact({ dark }) {
       setSent(true)
       setForm({ name: '', email: '', message: '' })
     })
-    .catch(err => {
-      console.error(err)
-    })
+    .catch(err => console.error(err))
   }
+
+  const glassBg = dark ? 'rgba(10,25,50,0.6)' : 'rgba(255,255,255,0.65)'
+  const glassBorder = dark
+    ? '1px solid rgba(0,229,255,0.14)'
+    : '1px solid rgba(124,77,255,0.14)'
 
   const inputSx = {
     '& .MuiOutlinedInput-root': {
@@ -48,14 +100,26 @@ export default function Contact({ dark }) {
         borderColor: accent,
         boxShadow: `0 0 0 3px ${accent}18`,
       },
+      transition: 'all 0.3s',
     },
     '& .MuiInputLabel-root.Mui-focused': { color: accent },
+    '& .MuiOutlinedInput-input': {
+      transition: 'background 0.3s',
+    },
   }
 
   return (
-    <Box id="contact" sx={{ py: 12, pb: 16, position: 'relative', zIndex: 1 }}>
+    <Box
+      id="contact"
+      ref={sectionRef}
+      sx={{ py: 12, pb: 16, position: 'relative', zIndex: 1 }}
+    >
       <Container maxWidth="lg">
-        <Reveal>
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={inView ? { y: 0, opacity: 1 } : {}}
+          transition={{ duration: 0.6 }}
+        >
           <Typography
             variant="h2"
             sx={{
@@ -67,6 +131,7 @@ export default function Contact({ dark }) {
                 width: 60, height: 4, borderRadius: 2,
                 background: 'linear-gradient(90deg,#00e5ff,#7c4dff)',
                 mt: 1.5,
+                boxShadow: '0 0 12px rgba(0,229,255,0.4)',
               },
             }}
           >
@@ -75,14 +140,18 @@ export default function Contact({ dark }) {
           <Typography sx={{ color: 'text.secondary', mb: 7 }}>
             Have a project in mind? I'd love to hear from you.
           </Typography>
-        </Reveal>
+        </motion.div>
 
         <Grid container spacing={4}>
-          {/* Contact links */}
           <Grid item xs={12} md={5}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              animate={inView ? 'visible' : 'hidden'}
+              style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+            >
               {CONTACT_LINKS.map((link, i) => (
-                <Reveal key={i} delay={i * 0.1} direction="left">
+                <motion.div key={i} variants={fadeLeft}>
                   <Box
                     component="a"
                     href={link.href}
@@ -125,15 +194,13 @@ export default function Contact({ dark }) {
                       {link.icon}
                     </Box>
                     <Box>
-                      <Typography
-                        sx={{
-                          fontSize: '0.7rem',
-                          color: link.color,
-                          fontWeight: 700,
-                          letterSpacing: 1.2,
-                          textTransform: 'uppercase',
-                        }}
-                      >
+                      <Typography sx={{
+                        fontSize: '0.7rem',
+                        color: link.color,
+                        fontWeight: 700,
+                        letterSpacing: 1.2,
+                        textTransform: 'uppercase',
+                      }}>
                         {link.label}
                       </Typography>
                       <Typography sx={{ fontSize: '0.88rem', fontWeight: 500 }}>
@@ -141,11 +208,10 @@ export default function Contact({ dark }) {
                       </Typography>
                     </Box>
                   </Box>
-                </Reveal>
+                </motion.div>
               ))}
 
-              {/* Availability badge */}
-              <Reveal delay={0.45}>
+              <motion.div variants={fadeLeft}>
                 <Box
                   sx={{
                     display: 'flex',
@@ -159,12 +225,14 @@ export default function Contact({ dark }) {
                   }}
                 >
                   <Box
+                    component={motion.div}
+                    animate={{ opacity: [1, 0.4, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                     sx={{
                       width: 10, height: 10,
                       borderRadius: '50%',
                       background: '#4caf50',
                       boxShadow: '0 0 8px #4caf50',
-                      animation: 'pulseGlow 2s ease-in-out infinite',
                       flexShrink: 0,
                     }}
                   />
@@ -172,14 +240,17 @@ export default function Contact({ dark }) {
                     Open to new opportunities & collaborations
                   </Typography>
                 </Box>
-              </Reveal>
-            </Box>
+              </motion.div>
+            </motion.div>
           </Grid>
 
-          {/* Message form */}
           <Grid item xs={12} md={7}>
-            <Reveal delay={0.2} direction="right">
-              <TiltCard
+            <motion.div
+              variants={fadeRight}
+              initial="hidden"
+              animate={inView ? 'visible' : 'hidden'}
+            >
+              <Box
                 sx={{
                   background: glassBg,
                   border: glassBorder,
@@ -192,90 +263,102 @@ export default function Contact({ dark }) {
                   Send a Message
                 </Typography>
 
-                {sent ? (
-                  <Box
-                    sx={{
-                      py: 6,
-                      textAlign: 'center',
-                      animation: 'fadeInUp 0.5s ease both',
-                    }}
-                  >
-                    <Typography sx={{ fontSize: '3.5rem', mb: 2 }}>🎉</Typography>
-                    <Typography variant="h6" sx={{ color: accent, mb: 1 }}>
-                      Message Sent!
-                    </Typography>
-                    <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
-                      Thanks for reaching out. I'll get back to you soon.
-                    </Typography>
-                  </Box>
-                ) : (
-                  <Box
-                    component="form"
-                    onSubmit={handleSubmit}
-                    sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}
-                  >
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Your Name"
-                          name="name"
-                          value={form.name}
-                          onChange={handleChange}
-                          required
-                          sx={inputSx}
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          fullWidth
-                          label="Email Address"
-                          name="email"
-                          type="email"
-                          value={form.email}
-                          onChange={handleChange}
-                          required
-                          sx={inputSx}
-                        />
-                      </Grid>
-                    </Grid>
-                    <TextField
-                      fullWidth
-                      label="Your Message"
-                      name="message"
-                      multiline
-                      rows={5}
-                      value={form.message}
-                      onChange={handleChange}
-                      required
-                      sx={inputSx}
-                    />
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      size="large"
-                      endIcon={<SendIcon />}
-                      sx={{
-                        background: 'linear-gradient(135deg,#00e5ff,#7c4dff)',
-                        color: '#fff',
-                        py: 1.6,
-                        fontSize: '0.95rem',
-                        fontWeight: 700,
-                        boxShadow: '0 8px 30px rgba(0,229,255,0.28)',
-                        '&:hover': {
-                          background: 'linear-gradient(135deg,#7c4dff,#00e5ff)',
-                          boxShadow: '0 12px 40px rgba(0,229,255,0.45)',
-                          transform: 'translateY(-2px)',
-                        },
-                        transition: 'all 0.3s',
-                      }}
+                <AnimatePresence mode="wait">
+                  {sent ? (
+                    <Box
+                      key="sent"
+                      component={motion.div}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      sx={{ py: 6, textAlign: 'center' }}
                     >
-                      Send Message
-                    </Button>
-                  </Box>
-                )}
-              </TiltCard>
-            </Reveal>
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <Typography sx={{ fontSize: '3.5rem', mb: 2 }}>🎉</Typography>
+                      </motion.div>
+                      <Typography variant="h6" sx={{ color: accent, mb: 1 }}>
+                        Message Sent!
+                      </Typography>
+                      <Typography sx={{ color: 'text.secondary', fontSize: '0.9rem' }}>
+                        Thanks for reaching out. I'll get back to you soon.
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Box
+                      key="form"
+                      component={motion.form}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onSubmit={handleSubmit}
+                      sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}
+                    >
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            fullWidth
+                            label="Your Name"
+                            name="name"
+                            value={form.name}
+                            onChange={handleChange}
+                            required
+                            sx={inputSx}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <TextField
+                            fullWidth
+                            label="Email Address"
+                            name="email"
+                            type="email"
+                            value={form.email}
+                            onChange={handleChange}
+                            required
+                            sx={inputSx}
+                          />
+                        </Grid>
+                      </Grid>
+                      <TextField
+                        fullWidth
+                        label="Your Message"
+                        name="message"
+                        multiline
+                        rows={5}
+                        value={form.message}
+                        onChange={handleChange}
+                        required
+                        sx={inputSx}
+                      />
+                      <MagneticButton
+                        type="submit"
+                        variant="contained"
+                        size="large"
+                        endIcon={<SendIcon />}
+                        sx={{
+                          background: 'linear-gradient(135deg,#00e5ff,#7c4dff)',
+                          color: '#fff',
+                          py: 1.6,
+                          fontSize: '0.95rem',
+                          fontWeight: 700,
+                          boxShadow: '0 8px 30px rgba(0,229,255,0.28)',
+                          '&:hover': {
+                            background: 'linear-gradient(135deg,#7c4dff,#00e5ff)',
+                            boxShadow: '0 12px 40px rgba(0,229,255,0.45)',
+                            transform: 'translateY(-2px)',
+                          },
+                          transition: 'all 0.3s',
+                        }}
+                      >
+                        Send Message
+                      </MagneticButton>
+                    </Box>
+                  )}
+                </AnimatePresence>
+              </Box>
+            </motion.div>
           </Grid>
         </Grid>
       </Container>

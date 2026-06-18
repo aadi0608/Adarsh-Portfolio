@@ -2,9 +2,29 @@ import { useState, useEffect } from 'react'
 import {
   AppBar, Toolbar, Typography, Box, IconButton,
 } from '@mui/material'
+import { motion, AnimatePresence } from 'framer-motion'
 import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
 import { NAV_ITEMS } from '../data'
+
+const navItemVariants = {
+  hidden: { y: -20, opacity: 0 },
+  visible: i => ({
+    y: 0,
+    opacity: 1,
+    transition: { delay: i * 0.05, type: 'spring', stiffness: 120 },
+  }),
+}
+
+const mobileItemVariants = {
+  hidden: { x: -20, opacity: 0 },
+  visible: i => ({
+    x: 0,
+    opacity: 1,
+    transition: { delay: i * 0.05 },
+  }),
+  exit: { x: -20, opacity: 0 },
+}
 
 export default function Navbar({ dark, onToggleTheme, activeSection, onNavigate }) {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -23,20 +43,19 @@ export default function Navbar({ dark, onToggleTheme, activeSection, onNavigate 
       elevation={0}
       sx={{
         background: dark
-          ? scrolled ? 'rgba(4,11,20,0.85)' : 'rgba(4,11,20,0.5)'
-          : scrolled ? 'rgba(240,244,255,0.88)' : 'rgba(240,244,255,0.5)',
-        backdropFilter: 'blur(20px)',
+          ? scrolled ? 'rgba(3,8,17,0.92)' : 'rgba(3,8,17,0.3)'
+          : scrolled ? 'rgba(240,244,255,0.92)' : 'rgba(240,244,255,0.3)',
+        backdropFilter: 'blur(24px)',
         borderBottom: `1px solid ${dark ? 'rgba(0,229,255,0.08)' : 'rgba(124,77,255,0.1)'}`,
-        transition: 'background 0.4s ease',
+        transition: 'background 0.5s ease, border-color 0.3s ease',
         zIndex: 100,
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, md: 6 } }}>
-        {/* Logo */}
         <Typography
           onClick={() => onNavigate('home')}
           sx={{
-            fontFamily: 'Syne',
+            fontFamily: 'Orbitron, Syne, sans-serif',
             fontWeight: 800,
             fontSize: '1.5rem',
             background: 'linear-gradient(90deg, #00e5ff, #7c4dff)',
@@ -45,23 +64,28 @@ export default function Navbar({ dark, onToggleTheme, activeSection, onNavigate 
             backgroundClip: 'text',
             cursor: 'pointer',
             userSelect: 'none',
+            letterSpacing: '2px',
           }}
         >
           AT.
         </Typography>
 
-        {/* Desktop nav */}
-        <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 3.5, alignItems: 'center' }}>
-          {NAV_ITEMS.map(item => (
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 4, alignItems: 'center' }}>
+          {NAV_ITEMS.map((item, i) => (
             <Box
+              component={motion.div}
               key={item}
+              custom={i}
+              initial="hidden"
+              animate="visible"
+              variants={navItemVariants}
               onClick={() => onNavigate(item.toLowerCase())}
               sx={{
                 position: 'relative',
                 cursor: 'pointer',
-                fontSize: '0.9rem',
+                fontSize: '0.88rem',
                 fontWeight: 500,
-                letterSpacing: '0.3px',
+                letterSpacing: '0.5px',
                 color: activeSection === item ? accent : 'text.secondary',
                 transition: 'color 0.3s',
                 '&:hover': { color: accent },
@@ -74,6 +98,7 @@ export default function Navbar({ dark, onToggleTheme, activeSection, onNavigate 
                   background: `linear-gradient(90deg, #00e5ff, #7c4dff)`,
                   transition: 'width 0.3s ease',
                   borderRadius: '2px',
+                  boxShadow: activeSection === item ? `0 0 8px ${accent}` : 'none',
                 },
                 '&:hover::after': { width: '100%' },
               }}
@@ -83,11 +108,12 @@ export default function Navbar({ dark, onToggleTheme, activeSection, onNavigate 
           ))}
         </Box>
 
-        {/* Right side */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          {/* Theme toggle pill */}
           <Box
+            component={motion.div}
             onClick={onToggleTheme}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             sx={{
               width: 54,
               height: 28,
@@ -99,12 +125,15 @@ export default function Navbar({ dark, onToggleTheme, activeSection, onNavigate 
               cursor: 'pointer',
               transition: 'background 0.4s',
               boxShadow: dark
-                ? '0 0 14px rgba(0,229,255,0.4)'
-                : '0 0 14px rgba(124,77,255,0.35)',
+                ? '0 0 14px rgba(0,229,255,0.4), inset 0 0 4px rgba(255,255,255,0.2)'
+                : '0 0 14px rgba(124,77,255,0.35), inset 0 0 4px rgba(255,255,255,0.2)',
               flexShrink: 0,
             }}
           >
             <Box
+              component={motion.div}
+              layout
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               sx={{
                 position: 'absolute',
                 top: 3,
@@ -113,7 +142,6 @@ export default function Navbar({ dark, onToggleTheme, activeSection, onNavigate 
                 height: 22,
                 borderRadius: '50%',
                 background: '#fff',
-                transition: 'left 0.3s ease',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -124,55 +152,77 @@ export default function Navbar({ dark, onToggleTheme, activeSection, onNavigate 
             </Box>
           </Box>
 
-          {/* Mobile menu button */}
           <IconButton
             sx={{ display: { md: 'none' }, color: accent }}
             onClick={() => setMobileOpen(o => !o)}
           >
-            {mobileOpen ? <CloseIcon /> : <MenuIcon />}
+            <AnimatePresence mode="wait">
+              {mobileOpen ? (
+                <motion.div key="close" initial={{ rotate: -90 }} animate={{ rotate: 0 }} exit={{ rotate: 90 }}>
+                  <CloseIcon />
+                </motion.div>
+              ) : (
+                <motion.div key="menu" initial={{ rotate: 90 }} animate={{ rotate: 0 }} exit={{ rotate: -90 }}>
+                  <MenuIcon />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </IconButton>
         </Box>
       </Toolbar>
 
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <Box
-          sx={{
-            display: { md: 'none' },
-            background: dark
-              ? 'rgba(4,11,20,0.97)'
-              : 'rgba(240,244,255,0.97)',
-            backdropFilter: 'blur(20px)',
-            borderTop: `1px solid ${dark ? 'rgba(0,229,255,0.1)' : 'rgba(124,77,255,0.1)'}`,
-            px: 3,
-            pb: 2,
-          }}
-        >
-          {NAV_ITEMS.map((item, i) => (
-            <Box
-              key={item}
-              onClick={() => {
-                onNavigate(item.toLowerCase())
-                setMobileOpen(false)
-              }}
-              sx={{
-                py: 1.4,
-                fontWeight: 500,
-                cursor: 'pointer',
-                color: activeSection === item ? accent : 'text.primary',
-                borderBottom:
-                  i < NAV_ITEMS.length - 1
-                    ? `1px solid ${dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'}`
-                    : 'none',
-                transition: 'all 0.2s',
-                '&:hover': { color: accent, pl: 1 },
-              }}
-            >
-              {item}
+      <AnimatePresence>
+        {mobileOpen && (
+          <Box
+            component={motion.div}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            sx={{
+              display: { md: 'none' },
+              overflow: 'hidden',
+              background: dark
+                ? 'rgba(3,8,17,0.98)'
+                : 'rgba(240,244,255,0.98)',
+              backdropFilter: 'blur(24px)',
+              borderTop: `1px solid ${dark ? 'rgba(0,229,255,0.1)' : 'rgba(124,77,255,0.1)'}`,
+            }}
+          >
+            <Box sx={{ px: 3, pb: 2 }}>
+              {NAV_ITEMS.map((item, i) => (
+                <Box
+                  component={motion.div}
+                  key={item}
+                  custom={i}
+                  variants={mobileItemVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  onClick={() => {
+                    onNavigate(item.toLowerCase())
+                    setMobileOpen(false)
+                  }}
+                  sx={{
+                    py: 1.4,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    color: activeSection === item ? accent : 'text.primary',
+                    borderBottom:
+                      i < NAV_ITEMS.length - 1
+                        ? `1px solid ${dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'}`
+                        : 'none',
+                    transition: 'all 0.2s',
+                    '&:hover': { color: accent, pl: 1 },
+                  }}
+                >
+                  {item}
+                </Box>
+              ))}
             </Box>
-          ))}
-        </Box>
-      )}
+          </Box>
+        )}
+      </AnimatePresence>
     </AppBar>
   )
 }

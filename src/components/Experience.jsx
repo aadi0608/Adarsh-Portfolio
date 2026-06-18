@@ -1,18 +1,75 @@
+import { useRef } from 'react'
 import { Box, Container, Grid, Typography, Chip } from '@mui/material'
+import { motion, useInView } from 'framer-motion'
 import { EXPERIENCE } from '../data'
-import Reveal from './Reveal'
-import TiltCard from './TiltCard'
+
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.1 } },
+}
+
+const fadeLeft = {
+  hidden: { x: -50, opacity: 0 },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: { type: 'spring', stiffness: 80, damping: 20 },
+  },
+}
+
+const fadeRight = {
+  hidden: { x: 50, opacity: 0 },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: { type: 'spring', stiffness: 80, damping: 20 },
+  },
+}
+
+function TimelineDot({ delay }) {
+  return (
+    <Box
+      component={motion.div}
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ delay, type: 'spring', stiffness: 200 }}
+      sx={{
+        width: 12,
+        height: 12,
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #00e5ff, #7c4dff)',
+        boxShadow: '0 0 12px rgba(0,229,255,0.5)',
+        flexShrink: 0,
+        mt: 0.6,
+      }}
+    />
+  )
+}
 
 export default function Experience({ dark }) {
-  const accent      = dark ? '#00e5ff' : '#7c4dff'
-  const accent2     = dark ? '#7c4dff' : '#ff4081'
-  const glassBg     = dark ? 'rgba(10,25,50,0.6)'  : 'rgba(255,255,255,0.65)'
-  const glassBorder = dark ? '1px solid rgba(0,229,255,0.14)' : '1px solid rgba(124,77,255,0.14)'
+  const accent = dark ? '#00e5ff' : '#7c4dff'
+  const accent2 = dark ? '#7c4dff' : '#ff4081'
+
+  const sectionRef = useRef(null)
+  const inView = useInView(sectionRef, { once: true, amount: 0.1 })
+
+  const glassBg = dark ? 'rgba(10,25,50,0.6)' : 'rgba(255,255,255,0.65)'
+  const glassBorder = dark
+    ? '1px solid rgba(0,229,255,0.14)'
+    : '1px solid rgba(124,77,255,0.14)'
 
   return (
-    <Box id="experience" sx={{ py: 12, position: 'relative', zIndex: 1 }}>
+    <Box
+      id="experience"
+      ref={sectionRef}
+      sx={{ py: 12, position: 'relative', zIndex: 1 }}
+    >
       <Container maxWidth="lg">
-        <Reveal>
+        <motion.div
+          initial={{ y: 30, opacity: 0 }}
+          animate={inView ? { y: 0, opacity: 1 } : {}}
+          transition={{ duration: 0.6 }}
+        >
           <Typography
             variant="h2"
             sx={{
@@ -24,18 +81,24 @@ export default function Experience({ dark }) {
                 width: 60, height: 4, borderRadius: 2,
                 background: 'linear-gradient(90deg,#00e5ff,#7c4dff)',
                 mt: 1.5,
+                boxShadow: '0 0 12px rgba(0,229,255,0.4)',
               },
             }}
           >
             Experience
           </Typography>
-        </Reveal>
+        </motion.div>
 
         <Grid container spacing={4}>
-          {/* Company card */}
           <Grid item xs={12} md={5}>
-            <Reveal direction="left">
-              <TiltCard
+            <motion.div
+              variants={fadeLeft}
+              initial="hidden"
+              animate={inView ? 'visible' : 'hidden'}
+            >
+              <Box
+                component={motion.div}
+                whileHover={{ y: -4 }}
                 sx={{
                   background: glassBg,
                   border: `1px solid ${accent}28`,
@@ -43,10 +106,13 @@ export default function Experience({ dark }) {
                   borderRadius: 4,
                   p: 4,
                   height: '100%',
-                  animation: 'pulseGlow 5s ease-in-out infinite',
+                  transition: 'box-shadow 0.3s, border-color 0.3s',
+                  '&:hover': {
+                    boxShadow: `0 12px 40px ${accent}18`,
+                    borderColor: `${accent}45`,
+                  },
                 }}
               >
-                {/* Icon + title */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                   <Box
                     sx={{
@@ -74,7 +140,6 @@ export default function Experience({ dark }) {
                   </Box>
                 </Box>
 
-                {/* Chips */}
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
                   <Chip
                     label={EXPERIENCE.period}
@@ -104,7 +169,6 @@ export default function Experience({ dark }) {
                   {EXPERIENCE.description}
                 </Typography>
 
-                {/* Glowing divider */}
                 <Box
                   sx={{
                     mt: 3,
@@ -114,7 +178,6 @@ export default function Experience({ dark }) {
                   }}
                 />
 
-                {/* Company detail */}
                 <Box sx={{ mt: 2.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
                   {[
                     { label: 'Industry', value: 'AI / Automation' },
@@ -127,59 +190,78 @@ export default function Experience({ dark }) {
                     </Box>
                   ))}
                 </Box>
-              </TiltCard>
-            </Reveal>
+              </Box>
+            </motion.div>
           </Grid>
 
-          {/* Responsibilities */}
           <Grid item xs={12} md={7}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {EXPERIENCE.responsibilities.map((item, i) => (
-                <Reveal key={i} delay={i * 0.08}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      gap: 2,
-                      alignItems: 'flex-start',
-                      background: glassBg,
-                      border: glassBorder,
-                      backdropFilter: 'blur(14px)',
-                      borderRadius: 3,
-                      p: 2.2,
-                      cursor: 'default',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        borderColor: accent,
-                        transform: 'translateX(8px)',
-                        boxShadow: `0 4px 24px ${accent}18`,
-                        background: dark
-                          ? 'rgba(0,229,255,0.04)'
-                          : 'rgba(124,77,255,0.04)',
-                      },
-                    }}
-                  >
+            <Box sx={{ position: 'relative', pl: 4 }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: 12,
+                  top: 6,
+                  bottom: 6,
+                  width: 2,
+                  background: `linear-gradient(180deg, ${accent}, ${accent2}, transparent)`,
+                  borderRadius: 1,
+                }}
+              />
+              <motion.div
+                variants={stagger}
+                initial="hidden"
+                animate={inView ? 'visible' : 'hidden'}
+                style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+              >
+                {EXPERIENCE.responsibilities.map((item, i) => (
+                  <motion.div key={i} variants={fadeRight}>
                     <Box
+                      component={motion.div}
+                      whileHover={{ x: 8 }}
                       sx={{
-                        fontSize: '1.25rem',
-                        minWidth: 38,
-                        height: 38,
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: `${accent}12`,
-                        border: `1px solid ${accent}20`,
-                        borderRadius: 2,
-                        flexShrink: 0,
+                        gap: 2.5,
+                        alignItems: 'flex-start',
+                        background: glassBg,
+                        border: glassBorder,
+                        backdropFilter: 'blur(14px)',
+                        borderRadius: 3,
+                        p: 2.2,
+                        cursor: 'default',
+                        transition: 'border-color 0.3s, box-shadow 0.3s',
+                        '&:hover': {
+                          borderColor: accent,
+                          boxShadow: `0 6px 28px ${accent}16`,
+                          background: dark
+                            ? 'rgba(0,229,255,0.04)'
+                            : 'rgba(124,77,255,0.04)',
+                        },
                       }}
                     >
-                      {item.icon}
+                      <TimelineDot delay={0.5 + i * 0.1} />
+                      <Box
+                        sx={{
+                          fontSize: '1.25rem',
+                          minWidth: 38,
+                          height: 38,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: `${accent}12`,
+                          border: `1px solid ${accent}20`,
+                          borderRadius: 2,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {item.icon}
+                      </Box>
+                      <Typography sx={{ fontSize: '0.88rem', lineHeight: 1.75, color: 'text.secondary', pt: 0.3 }}>
+                        {item.text}
+                      </Typography>
                     </Box>
-                    <Typography sx={{ fontSize: '0.88rem', lineHeight: 1.75, color: 'text.secondary', pt: 0.3 }}>
-                      {item.text}
-                    </Typography>
-                  </Box>
-                </Reveal>
-              ))}
+                  </motion.div>
+                ))}
+              </motion.div>
             </Box>
           </Grid>
         </Grid>
